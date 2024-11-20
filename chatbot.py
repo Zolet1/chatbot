@@ -11,6 +11,7 @@ from openai import OpenAI
 
 # Certifique-se de ter baixado os pacotes necessários
 nltk.download('punkt')
+nltk.download('punkt_tab')
 
 
 
