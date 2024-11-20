@@ -8,22 +8,17 @@ from nltk.tokenize import sent_tokenize
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
-
-# Certifique-se de ter baixado os pacotes necessários
-nltk.download('punkt')
-nltk.download('punkt_tab')
-
-
-
-import os
 import subprocess
 import sys
 
+# Certifique-se de ter baixado os pacotes necessários
+nltk.download('punkt')
+
+# Função para instalar as dependências
 def install_requirements():
     requirements_file = "requirements.txt"
     if os.path.exists(requirements_file):
         try:
-            # Executa a instalação das dependências no requirements.txt
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_file])
             print("Dependências instaladas com sucesso!")
         except subprocess.CalledProcessError as e:
@@ -69,22 +64,18 @@ def search_docs(query, embeddings, index, texts, k=5):
 
 # Função para gerar a resposta usando o modelo atualizado
 def generate_answer(messages, embeddings, index, texts):
-    # Obter a última mensagem do usuário
     question = messages[-1]["content"]
     context = search_docs(question, embeddings, index, texts)
     context_str = "\n\n".join(context)
     
-    # Preparar as mensagens para a API OpenAI
     api_messages = [
         {"role": "system", "content": "Você é um assistente que responde perguntas sobre o Vestibular da Unicamp 2025 com base no edital oficial. Use as informações fornecidas para responder à pergunta do usuário."},
     ]
     
-    # Adicionar mensagens anteriores, limitando o tamanho total
     previous_messages = messages[-3:] if len(messages) >= 3 else messages
     for msg in previous_messages[:-1]:
         api_messages.append(msg)
     
-    # Adicionar a última mensagem do usuário com o contexto
     last_user_message = messages[-1]
     last_user_message_with_context = {
         "role": last_user_message["role"],
@@ -92,7 +83,6 @@ def generate_answer(messages, embeddings, index, texts):
     }
     api_messages.append(last_user_message_with_context)
     
-    # Chamar a API OpenAI
     chat_completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=api_messages,
@@ -107,10 +97,39 @@ def main():
     # Chamar a função no início do script
     install_requirements()
     
-    st.title("Chatbot Vestibular Unicamp 2025")
+    # Configuração da página
+    st.set_page_config(page_title="Chatbot Vestibular Unicamp 2025", page_icon="🎓", layout="wide")
     
-    st.write("Bem-vindo ao chatbot que responde suas dúvidas sobre o Vestibular da Unicamp 2025!")
+    # Adicionar estilo customizado
+    st.markdown("""
+        <style>
+            .stChatMessage {
+                font-size: 1.1em;
+            }
+            .user {
+                background-color: #DCF8C6;
+            }
+            .assistant {
+                background-color: #F1F0F0;
+            }
+            footer {visibility: hidden;}
+        </style>
+        """, unsafe_allow_html=True)
     
+    # Criar a barra lateral
+    with st.sidebar:
+        st.image("UNICAMP.png", use_container_width=True)
+        st.markdown("## Sobre")
+        st.write("Este chatbot foi desenvolvido para ajudar candidatos a esclarecer dúvidas sobre o Vestibular da Unicamp 2025.")
+        st.markdown("---")
+        st.markdown("### Desenvolvido por")
+        st.write("Augusto Zolet")
+        st.write("[LinkedIn](https://www.linkedin.com) | [GitHub](https://github.com)")
+    
+    st.title("🎓 Chatbot Vestibular Unicamp 2025")
+    st.write("Bem-vindo ao chatbot que responde suas dúvidas sobre o Vestibular da Unicamp 2025! Digite sua pergunta abaixo e aguarde a resposta.")
+
+    # Barra de progresso durante o processamento
     if 'texts' not in st.session_state:
         with st.spinner('Processando o edital, por favor aguarde...'):
             with open('Normas.txt', 'r', encoding='utf-8') as file:
@@ -125,7 +144,7 @@ def main():
         texts = st.session_state.texts
         embeddings = st.session_state.embeddings
         index = st.session_state.index
-    
+
     if 'messages' not in st.session_state:
         st.session_state.messages = []
     
@@ -141,7 +160,7 @@ def main():
         # Adicionar a mensagem do usuário ao estado da sessão
         st.session_state.messages.append({"role": "user", "content": question})
         with st.chat_message("user"):
-            st.markdown(question)
+            st.markdown(f"**Você:** {question}")
         
         # Gerar a resposta do assistente
         with st.spinner('Gerando resposta...'):
@@ -150,7 +169,7 @@ def main():
                 # Adicionar a resposta do assistente ao estado da sessão
                 st.session_state.messages.append({"role": "assistant", "content": answer})
                 with st.chat_message("assistant"):
-                    st.markdown(answer)
+                    st.markdown(f"**Chatbot:** {answer}")
             except Exception as e:
                 st.error(f"Ocorreu um erro: {e}")
 
