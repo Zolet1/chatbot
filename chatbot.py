@@ -3,16 +3,32 @@ import numpy as np
 import faiss
 import pandas as pd
 import streamlit as st
-import PyPDF2
 import nltk
 from nltk.tokenize import sent_tokenize
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from openai import OpenAI
-import re
 
 # Certifique-se de ter baixado os pacotes necessários
 nltk.download('punkt')
+
+
+
+import os
+import subprocess
+import sys
+
+def install_requirements():
+    requirements_file = "requirements.txt"
+    if os.path.exists(requirements_file):
+        try:
+            # Executa a instalação das dependências no requirements.txt
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_file])
+            print("Dependências instaladas com sucesso!")
+        except subprocess.CalledProcessError as e:
+            print(f"Erro ao instalar dependências: {e}")
+    else:
+        print(f"Arquivo {requirements_file} não encontrado!")
 
 # Configuração da chave de API
 client = OpenAI(
@@ -87,6 +103,9 @@ def generate_answer(messages, embeddings, index, texts):
 
 # Função principal do aplicativo Streamlit
 def main():
+    # Chamar a função no início do script
+    install_requirements()
+    
     st.title("Chatbot Vestibular Unicamp 2025")
     
     st.write("Bem-vindo ao chatbot que responde suas dúvidas sobre o Vestibular da Unicamp 2025!")
